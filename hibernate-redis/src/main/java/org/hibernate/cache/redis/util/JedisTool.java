@@ -39,7 +39,6 @@ import java.util.Properties;
 public final class JedisTool {
 
     public static final String EXPIRY_PROPERTY_PREFIX = "redis.expiryInSeconds.";
-    private static final String FILE_URL_PREFIX = "file:";
     private static Properties cacheProperties = null;
 
     private JedisTool() { }
@@ -48,9 +47,10 @@ public final class JedisTool {
      * create {@link org.hibernate.cache.redis.jedis.JedisClient} instance.
      */
     public static JedisClient createJedisClient(Properties props) {
-        log.info("create JedisClient.");
-        Properties cacheProps = loadCacheProperties(props);
-        Integer expiryInSeconds = Integer.decode(cacheProps.getProperty("redis.expiryInSeconds", "120"));  // 120 seconds
+        log
+            .info("create JedisClient.");
+        Properties cacheProps = props;
+        Integer expiryInSeconds = Integer.decode(cacheProps.getProperty(RedisConfig.EXPIRY_IN_SECONDS, "120"));  // 120 seconds
         cacheProperties = cacheProps;
 
         return new JedisClient(createJedisPool(cacheProps), expiryInSeconds);
@@ -61,11 +61,11 @@ public final class JedisTool {
      */
     public static JedisPool createJedisPool(Properties props) {
 
-        String host = props.getProperty("redis.host", "localhost");
-        Integer port = Integer.decode(props.getProperty("redis.port", String.valueOf(Protocol.DEFAULT_PORT)));
-        Integer timeout = Integer.decode(props.getProperty("redis.timeout", String.valueOf(Protocol.DEFAULT_TIMEOUT))); // msec
-        String password = props.getProperty("redis.password", null);
-        Integer database = Integer.decode(props.getProperty("redis.database", String.valueOf(Protocol.DEFAULT_DATABASE)));
+        String host = props.getProperty(RedisConfig.HOST, "localhost");
+        Integer port = Integer.decode(props.getProperty(RedisConfig.PORT, String.valueOf(Protocol.DEFAULT_PORT)));
+        Integer timeout = Integer.decode(props.getProperty(RedisConfig.TIMEOUT, String.valueOf(Protocol.DEFAULT_TIMEOUT))); // msec
+        String password = props.getProperty(RedisConfig.PASSWORD, null);
+        Integer database = Integer.decode(props.getProperty(RedisConfig.DATABASE, String.valueOf(Protocol.DEFAULT_DATABASE)));
 
         log.info("create JedisPool. host=[{}], port=[{}], timeout=[{}], password=[{}], database=[{}]",
                  host, port, timeout, password, database);
@@ -78,33 +78,6 @@ public final class JedisTool {
         poolConfig.setMaxTotal(256);
         poolConfig.setMinIdle(2);
         return poolConfig;
-    }
-
-    private static Properties loadCacheProperties(final Properties props) {
-        Properties cacheProps = new Properties();
-        String cachePath = props.getProperty(Environment.CACHE_PROVIDER_CONFIG,
-                                             "hibernate-redis.properties");
-
-        InputStream is = null;
-        try {
-            log.info("Loading cache properties... path=[{}]", cachePath);
-
-            if (cachePath.startsWith(FILE_URL_PREFIX)) {
-                // load from file
-                is = new FileInputStream(new File(new URI(cachePath)));
-            } else {
-                // load from resources stream
-                is = JedisTool.class.getClassLoader().getResourceAsStream(cachePath);
-            }
-            cacheProps.load(is);
-        } catch (Exception e) {
-            log.warn("Fail to load cache properties. cachePath=" + cachePath, e);
-        } finally {
-            if (is != null) {
-                try { is.close(); } catch (Exception ignored) { }
-            }
-        }
-        return cacheProps;
     }
 
     /**

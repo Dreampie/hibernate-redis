@@ -312,15 +312,14 @@ public class JedisClient {
         final byte[] rawKey = rawKey(key);
         final byte[] rawValue = rawValue(value);
         final int seconds = (int) unit.toSeconds(timeout);
-
-        runWithTx(new JedisTransactionalCallback() {
+        runWithPipeline(new JedisPipelinedCallback() {
             @Override
-            public void execute(Transaction tx) {
-                tx.hset(rawRegion, rawKey, rawValue);
+            public void execute(Pipeline pipeline) {
+                pipeline.hset(rawRegion, rawKey, rawValue);
                 if (seconds > 0 && !region.contains("UpdateTimestampsCache")) {
                     final byte[] rawZkey = rawZkey(region);
                     final long score = System.currentTimeMillis() + seconds * 1000L;
-                    tx.zadd(rawZkey, score, rawKey);
+                    pipeline.zadd(rawZkey, score, rawKey);
                 }
             }
         });
@@ -378,11 +377,11 @@ public class JedisClient {
         final byte[] rawKey = rawKey(key);
         final byte[] rawZkey = rawZkey(region);
 
-        runWithTx(new JedisTransactionalCallback() {
+        runWithPipeline(new JedisPipelinedCallback() {
             @Override
-            public void execute(Transaction tx) {
-                tx.hdel(rawRegion, rawKey);
-                tx.zrem(rawZkey, rawKey);
+            public void execute(Pipeline pipeline) {
+                pipeline.hdel(rawRegion, rawKey);
+                pipeline.zrem(rawZkey, rawKey);
             }
         });
 
@@ -400,12 +399,12 @@ public class JedisClient {
         final byte[] rawZkey = rawZkey(region);
         final byte[][] rawKeys = rawKeys(keys);
 
-        runWithTx(new JedisTransactionalCallback() {
+        runWithPipeline(new JedisPipelinedCallback() {
             @Override
-            public void execute(Transaction tx) {
+            public void execute(Pipeline pipeline) {
                 for (byte[] rawKey : rawKeys) {
-                    tx.hdel(rawRegion, rawKey);
-                    tx.zrem(rawZkey, rawKey);
+                    pipeline.hdel(rawRegion, rawKey);
+                    pipeline.zrem(rawZkey, rawKey);
                 }
             }
         });
@@ -422,11 +421,11 @@ public class JedisClient {
         final byte[] rawRegion = rawRegion(region);
         final byte[] rawZkey = rawZkey(region);
 
-        runWithTx(new JedisTransactionalCallback() {
+        runWithPipeline(new JedisPipelinedCallback() {
             @Override
-            public void execute(Transaction tx) {
-                tx.del(rawRegion);
-                tx.del(rawZkey);
+            public void execute(Pipeline pipeline) {
+                pipeline.del(rawRegion);
+                pipeline.del(rawZkey);
             }
         });
     }
