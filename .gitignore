@@ -1,9 +1,5 @@
 *.class
-*.log
-*.iml
-.idea
 .lucene
-.DS_Store
 .classpath
 target
 bin
@@ -19,3 +15,9 @@ build
 
 generated
 generatedTest
+.idea
+*.iml
+*.log
+*.log.*
+
+**/.DS_Store
