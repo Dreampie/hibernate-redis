@@ -157,9 +157,9 @@ public class JedisClient {
         run(new JedisCallback<Object>() {
           @Override
           public Object execute(Jedis jedis) {
-            final byte[] rawZkey = rawZkey(region);
+            final byte[] rawKnownKeysKey = rawKnownKeyskey(region);
             final long score = System.currentTimeMillis() + expirationInSeconds * 1000L;
-            return jedis.zadd(rawZkey, score, rawKey);
+            return jedis.zadd(rawKnownKeysKey, score, rawKey);
           }
         });
       }
@@ -169,13 +169,13 @@ public class JedisClient {
   }
 
   private Boolean isExpired(final String region, final Object key) {
-    final byte[] rawZkey = rawZkey(region);
+    final byte[] rawKnownKeysKey = rawKnownKeyskey(region);
     final byte[] rawKey = rawKey(key);
 
     Double timestamp = run(new JedisCallback<Double>() {
       @Override
       public Double execute(Jedis jedis) {
-        return jedis.zscore(rawZkey, rawKey);
+        return jedis.zscore(rawKnownKeysKey, rawKey);
       }
     });
     return timestamp != null && System.currentTimeMillis() > timestamp.longValue();
@@ -212,11 +212,11 @@ public class JedisClient {
    */
 
   public Long keySizeInRegion(final String region) {
-    final byte[] rawZkey = rawZkey(region);
+    final byte[] rawKnownKeysKey = rawKnownKeyskey(region);
     return run(new JedisCallback<Long>() {
       @Override
       public Long execute(Jedis jedis) {
-        return jedis.zcard(rawZkey);
+        return jedis.zcard(rawKnownKeysKey);
       }
     });
   }
@@ -229,13 +229,13 @@ public class JedisClient {
    */
   public Map<Object, Object> hgetAll(String region) {
     final byte[] rawRegion = rawRegion(region);
-    final byte[] rawZkey = rawZkey(region);
+    final byte[] rawKnownKeysKey = rawKnownKeyskey(region);
     Map<byte[], byte[]> rawMap = run(new JedisCallback<Map<byte[], byte[]>>() {
       @Override
       public Map<byte[], byte[]> execute(Jedis jedis) {
         Map<byte[], byte[]> rawMap = new HashMap<byte[], byte[]>();
 
-        Set<byte[]> rawKeys = jedis.zrange(rawZkey, 0, -1);
+        Set<byte[]> rawKeys = jedis.zrange(rawKnownKeysKey, 0, -1);
         List<byte[]> regionedKeys = new ArrayList<byte[]>();
         for (byte[] rawKey : rawKeys) {
           regionedKeys.add(getRegionedKey(rawRegion, rawKey));
@@ -331,10 +331,10 @@ public class JedisClient {
         pipeline.expire(regionedKey, seconds);
 
         if (seconds > 0 && !region.contains("UpdateTimestampsCache")) {
-          final byte[] rawZkey = rawZkey(region);
+          final byte[] rawKnownKeysKey = rawKnownKeyskey(region);
           final long score = System.currentTimeMillis() + seconds * 1000L;
-          pipeline.zadd(rawZkey, score, rawKey);
-//          pipeline.expire(rawZkey, seconds);
+          pipeline.zadd(rawKnownKeysKey, score, rawKey);
+//          pipeline.expire(rawKnownKeyskey, seconds);
         }
       }
     });
@@ -376,15 +376,15 @@ public class JedisClient {
   public Long del(final String region, final Object key) {
     final byte[] rawRegion = rawRegion(region);
     final byte[] rawKey = rawKey(key);
-    final byte[] rawZkey = rawZkey(region);
-    byte[] regionedKey = getRegionedKey(rawRegion, rawKey);
+    final byte[] rawKnownKeysKey = rawKnownKeyskey(region);
+    final byte[] regionedKey = getRegionedKey(rawRegion, rawKey);
 
     runWithPipeline(new JedisPipelinedCallback() {
       @Override
       public void execute(Pipeline pipeline) {
         pipeline.del(regionedKey);
-        pipeline.zrem(rawZkey, rawKey);
-        pipeline.zremrangeByScore(rawZkey, 0, System.currentTimeMillis());
+        pipeline.zrem(rawKnownKeysKey, rawKey);
+        pipeline.zremrangeByScore(rawKnownKeysKey, 0, System.currentTimeMillis());
       }
     });
 
@@ -399,7 +399,7 @@ public class JedisClient {
   public void mdel(final String region, final Collection<?> keys) {
 
     final byte[] rawRegion = rawRegion(region);
-    final byte[] rawZkey = rawZkey(region);
+    final byte[] rawKnownKeysKey = rawKnownKeyskey(region);
     final byte[][] rawKeys = rawKeys(keys);
 
     runWithPipeline(new JedisPipelinedCallback() {
@@ -411,8 +411,8 @@ public class JedisClient {
         }
 
         pipeline.del(regionedKeys.toArray(new byte[regionedKeys.size()][]));
-        pipeline.zrem(rawZkey, rawKeys);
-        pipeline.zremrangeByScore(rawZkey, 0, System.currentTimeMillis());
+        pipeline.zrem(rawKnownKeysKey, rawKeys);
+        pipeline.zremrangeByScore(rawKnownKeysKey, 0, System.currentTimeMillis());
       }
     });
   }
@@ -427,7 +427,7 @@ public class JedisClient {
     log.debug("delete region region=[{}]", region);
 
     final byte[] rawRegion = rawRegion(region);
-    final byte[] rawZkey = rawZkey(region);
+    final byte[] rawKnownKeysKey = rawKnownKeyskey(region);
 
     runWithPipeline(new JedisPipelinedCallback() {
       @Override
@@ -437,7 +437,7 @@ public class JedisClient {
 
         do {
           // need to paginate the keys
-          Set<byte[]> rawKeys = pipeline.zrange(rawZkey, (offset) * PAGE_SIZE, (offset + 1) * PAGE_SIZE - 1).get();
+          Set<byte[]> rawKeys = pipeline.zrange(rawKnownKeysKey, (offset) * PAGE_SIZE, (offset + 1) * PAGE_SIZE - 1).get();
           finished = rawKeys.size() < PAGE_SIZE;
           offset++;
           if (!rawKeys.isEmpty()) {
@@ -450,7 +450,7 @@ public class JedisClient {
           }
         } while (!finished);
 
-        pipeline.del(rawZkey);
+        pipeline.del(rawKnownKeysKey);
       }
     });
   }
@@ -489,8 +489,8 @@ public class JedisClient {
   /**
    * Serialize expiration region name
    */
-  private byte[] rawZkey(final String region) {
-    return rawRegion("z:" + region);
+  private byte[] rawKnownKeyskey(final String region) {
+    return rawRegion(region + "~keys");
   }
 
   /**
