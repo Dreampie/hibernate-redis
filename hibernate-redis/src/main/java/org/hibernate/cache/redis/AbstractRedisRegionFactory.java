@@ -69,7 +69,7 @@ abstract class AbstractRedisRegionFactory implements RegionFactory {
     /**
      * expiration management thread
      */
-    protected static Thread expirationThread = null;
+//    protected static Thread expirationThread = null;
 
     public AbstractRedisRegionFactory(Properties props) {
         this.props = props;
@@ -160,37 +160,37 @@ abstract class AbstractRedisRegionFactory implements RegionFactory {
                                          properties);
     }
 
-    protected synchronized void manageExpiration(final JedisClient redis) {
-        if (expirationThread != null && expirationThread.isAlive())
-            return;
-
-        expirationThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        Thread.sleep(1000L);
-                        Set<String> regions = regionNames.clone();
-                        for (final String region : regions) {
-                            if (redis != null) {
-                                try {
-                                    redis.expire(region);
-                                } catch (Exception ignored) {
-                                    log.warn("Error occurred in expiration management thread. but it was ignored", ignored);
-                                }
-                            }
-                        }
-                    } catch (InterruptedException ignored) {
-                        break;
-                    } catch (Exception ignored) {
-                        log.warn("Error occurred in expiration management thread. but it was ignored", ignored);
-                    }
-                }
-            }
-        });
-        expirationThread.setDaemon(true);
-        expirationThread.start();
-    }
+//    protected synchronized void manageExpiration(final JedisClient redis) {
+//        if (expirationThread != null && expirationThread.isAlive())
+//            return;
+//
+//        expirationThread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                while (true) {
+//                    try {
+//                        Thread.sleep(1000L);
+//                        Set<String> regions = regionNames.clone();
+//                        for (final String region : regions) {
+//                            if (redis != null) {
+//                                try {
+//                                    redis.expire(region);
+//                                } catch (Exception ignored) {
+//                                    log.warn("Error occurred in expiration management thread. but it was ignored", ignored);
+//                                }
+//                            }
+//                        }
+//                    } catch (InterruptedException ignored) {
+//                        break;
+//                    } catch (Exception ignored) {
+//                        log.warn("Error occurred in expiration management thread. but it was ignored", ignored);
+//                    }
+//                }
+//            }
+//        });
+//        expirationThread.setDaemon(true);
+//        expirationThread.start();
+//    }
 
     private static final long serialVersionUID = -5441842686229077097L;
 }
