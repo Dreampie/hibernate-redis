@@ -47,8 +47,7 @@ public final class JedisTool {
      * create {@link org.hibernate.cache.redis.jedis.JedisClient} instance.
      */
     public static JedisClient createJedisClient(Properties props) {
-        log
-            .info("create JedisClient.");
+        log.info("create JedisClient.");
         Properties cacheProps = props;
         Integer expiryInSeconds = Integer.decode(cacheProps.getProperty(RedisConfig.EXPIRY_IN_SECONDS, "120"));  // 120 seconds
         cacheProperties = cacheProps;
