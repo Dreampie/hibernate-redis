@@ -451,7 +451,6 @@ public class JedisClient {
         } while (!finished);
 
         pipeline.del(rawZkey);
-        pipeline.zremrangeByScore(rawZkey, 0, System.currentTimeMillis());
       }
     });
   }
