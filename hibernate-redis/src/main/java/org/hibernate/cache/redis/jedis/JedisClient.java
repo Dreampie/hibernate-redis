@@ -334,7 +334,7 @@ public class JedisClient {
           final byte[] rawZkey = rawZkey(region);
           final long score = System.currentTimeMillis() + seconds * 1000L;
           pipeline.zadd(rawZkey, score, rawKey);
-          pipeline.expire(rawZkey, seconds);
+//          pipeline.expire(rawZkey, seconds);
         }
       }
     });
