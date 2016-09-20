@@ -456,6 +456,32 @@ public class JedisClient {
   }
 
   /**
+   * delete cache item which is expired in region,item has set expire,so remove keys expired
+   *
+   * @param region region name
+   */
+  public void expire(final String region) {
+
+    try {
+      final byte[] rawKnownKeysKey = rawKnownKeyskey(region);
+      final long score = System.currentTimeMillis();
+
+      log.debug("delete expired cache item in region[{}] expire time=[{}]", region, score);
+
+      runWithPipeline(new JedisPipelinedCallback() {
+        @Override
+        public void execute(Pipeline pipeline) {
+
+          pipeline.zremrangeByScore(rawKnownKeysKey, 0, score);
+        }
+      });
+
+    } catch (Exception ignored) {
+      log.warn("Error in Cache Expiration Method.", ignored);
+    }
+  }
+
+  /**
    * flush db
    */
   public String flushDb() {
