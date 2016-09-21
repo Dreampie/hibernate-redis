@@ -70,15 +70,15 @@ public class JedisClientTest {
 
     @Test
     public void getAndSet() throws Exception {
-        client.set(JedisClient.DEFAULT_REGION_NAME, "key", 123, -1);
+        client.set(JedisClient.DEFAULT_REGION_NAME, "key", 123);
         assertThat(client.get(JedisClient.DEFAULT_REGION_NAME, "key")).isEqualTo(123);
     }
 
     @Test
     public void expireTest() throws Exception {
-        client.set(JedisClient.DEFAULT_REGION_NAME, "expireTest", "Value", 1);
+        client.set(JedisClient.DEFAULT_REGION_NAME, "expireTest", "Value",3);
         assertThat(client.get(JedisClient.DEFAULT_REGION_NAME, "expireTest")).isEqualTo("Value");
-        Thread.sleep(1500);
+        Thread.sleep(3000);
         client.expire(JedisClient.DEFAULT_REGION_NAME);
         assertThat(client.get(JedisClient.DEFAULT_REGION_NAME, "expireTest")).isNull();
     }
@@ -107,7 +107,7 @@ public class JedisClientTest {
         int count = 100;
         List<Integer> keys = new ArrayList<Integer>();
         for (int i = 0; i < count; i++) {
-            client.set(JedisClient.DEFAULT_REGION_NAME, i, i, -1);
+            client.set(JedisClient.DEFAULT_REGION_NAME, i, i);
             keys.add(i);
         }
         List<Object> values = client.mget(JedisClient.DEFAULT_REGION_NAME, keys);
@@ -119,7 +119,7 @@ public class JedisClientTest {
         int count = 100;
         List<Integer> keys = new ArrayList<Integer>();
         for (int i = 0; i < count; i++) {
-            client.set(JedisClient.DEFAULT_REGION_NAME, i, i, -1);
+            client.set(JedisClient.DEFAULT_REGION_NAME, i, i);
             keys.add(i);
         }
         List<Object> values = client.mget(JedisClient.DEFAULT_REGION_NAME, keys);
@@ -139,7 +139,7 @@ public class JedisClientTest {
         int count = 100;
         List<Integer> keys = new ArrayList<Integer>();
         for (int i = 0; i < count; i++) {
-            client.set(JedisClient.DEFAULT_REGION_NAME, i, i, -1);
+            client.set(JedisClient.DEFAULT_REGION_NAME, i, i);
             keys.add(i);
         }
 
