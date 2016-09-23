@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * RedisClient implements using Jedis library
- * <p/>
+ * <p>
  * 참고 : https://github.com/xetorthio/org.hibernate.cache.redis.jedis/wiki/AdvancedUsage
  *
  * @author 배성혁 ( sunghyouk.bae@gmail.com )
@@ -200,8 +200,9 @@ public class JedisClient {
 
           do {
             // need to paginate the keys
-            rawKeys.addAll(jedis.zrange(rawKnownKeysKey, (offset) * PAGE_SIZE, (offset + 1) * PAGE_SIZE - 1));
-            finished = rawKeys.size() < PAGE_SIZE;
+            Set<byte[]> tmpRawKeys = jedis.zrange(rawKnownKeysKey, (offset) * PAGE_SIZE, (offset + 1) * PAGE_SIZE - 1);
+            rawKeys.addAll(tmpRawKeys);
+            finished = tmpRawKeys.size() < PAGE_SIZE;
             offset++;
           } while (!finished);
 
