@@ -29,11 +29,11 @@
 
     <distributionManagement>
         <repository>
-            <id>acfun-releases</id>
+            <id>acfunRepo</id>
             <url>http://nexus.acfun.tv/nexus/content/repositories/AcFun-Release/</url>
         </repository>
         <snapshotRepository>
-            <id>acfun-snapshots</id>
+            <id>acfunRepo</id>
             <url>http://nexus.acfun.tv/nexus/content/repositories/AcFun-Snapshot/</url>
         </snapshotRepository>
     </distributionManagement>
